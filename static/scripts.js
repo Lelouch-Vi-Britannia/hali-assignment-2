@@ -1,10 +1,12 @@
-let manualCentroids = [];  // Array to hold manually selected centroids
+// Initial button setup
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('initializeKMeans').disabled = true;
+    document.getElementById('stepKMeans').disabled = true;
+    document.getElementById('convergeKMeans').disabled = true;
+    document.getElementById('resetKMeans').disabled = true;
+});
 
-// Function to display a notification
-function showNotification(message) {
-    const notificationElement = document.getElementById('notification');
-    notificationElement.textContent = message;
-}
+let manualCentroids = [];  // Array to hold manually selected centroids
 
 // Function to get the selected initialization method
 function getInitializationMethod() {
@@ -36,13 +38,17 @@ function handleCanvasClick(event) {
         ctx.arc(x, y, 5, 0, 2 * Math.PI);
         ctx.fill();
 
-        // If enough centroids are selected, send to backend
+        // If enough centroids are selected, enable stepKMeans and convergeKMeans buttons
         const k = document.getElementById('numClusters').value;
         if (manualCentroids.length === parseInt(k)) {
             initializeManualCentroids(manualCentroids);
             manualCentroids = [];  // Clear the array for future use
 
-            // Remove event listener to stop taking further input
+            // Enable step and convergence buttons
+            document.getElementById('stepKMeans').disabled = false;
+            document.getElementById('convergeKMeans').disabled = false;
+
+            // Disable canvas click listener to stop further input
             canvas.removeEventListener('click', handleCanvasClick);
         }
     }
@@ -50,6 +56,18 @@ function handleCanvasClick(event) {
 
 // Add event listener for canvas clicks for manual centroid selection
 document.getElementById('kmeansCanvas').addEventListener('click', handleCanvasClick);
+
+// Event listener for initialization method change
+document.getElementById('initMethod').addEventListener('change', () => {
+    const initMethod = getInitializationMethod();
+    if (initMethod === 'manual') {
+        document.getElementById('initializeKMeans').disabled = true;
+        showNotification("Manual mode selected. Click on the canvas to select centroids.");
+    } else {
+        document.getElementById('initializeKMeans').disabled = false;
+        showNotification("");
+    }
+});
 
 // Function to send manual centroids to the backend
 async function initializeManualCentroids(centroids) {
@@ -83,19 +101,33 @@ async function displayImage(url) {
     };
 }
 
+// Function to display a notification
+function showNotification(message) {
+    const notificationElement = document.getElementById('notification');
+    notificationElement.textContent = message;
+}
+
 // Generate a new dataset
 document.getElementById('generateDataset').addEventListener('click', async () => {
-    // Reset the KMeans algorithm to prevent issues with previous state
     await fetch('/reset_kmeans', { method: 'POST' });
 
-    // Generate the new dataset
     await fetch('/generate_dataset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
     });
 
-    // Display the new dataset
     await displayImage('/get_dataset');
+
+    document.getElementById('initializeKMeans').disabled = false;
+    document.getElementById('resetKMeans').disabled = false;
+    document.getElementById('stepKMeans').disabled = true;
+    document.getElementById('convergeKMeans').disabled = true;
+
+    // Handle initialization method status
+    const initMethod = getInitializationMethod();
+    if (initMethod === 'manual') {
+        document.getElementById('initializeKMeans').disabled = true;
+    }
 });
 
 // Handle initialization of KMeans
@@ -103,15 +135,17 @@ document.getElementById('initializeKMeans').addEventListener('click', async () =
     const k = document.getElementById('numClusters').value;
     const initMethod = getInitializationMethod();
 
-    // Initialize KMeans with the selected k and method
     await fetch('/initialize_kmeans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ k, initMethod })
     });
 
-    // Display the initial state of KMeans after initialization
     await displayImage('/get_dataset');
+
+    document.getElementById('stepKMeans').disabled = false;
+    document.getElementById('convergeKMeans').disabled = false;
+    document.getElementById('initializeKMeans').disabled = true;
 });
 
 // Step through the KMeans process
@@ -130,6 +164,8 @@ document.getElementById('stepKMeans').addEventListener('click', async () => {
             const responseData = await response.json();
             if (responseData.message === "Converged") {
                 showNotification("The KMeans algorithm has converged.");
+                document.getElementById('stepKMeans').disabled = true;
+                document.getElementById('convergeKMeans').disabled = true;
             }
         } else {
             await displayImage(URL.createObjectURL(await response.blob()));
@@ -138,7 +174,6 @@ document.getElementById('stepKMeans').addEventListener('click', async () => {
         console.error("Failed to step KMeans");
     }
 });
-
 
 // Run KMeans to convergence
 document.getElementById('convergeKMeans').addEventListener('click', async () => {
@@ -150,20 +185,32 @@ document.getElementById('convergeKMeans').addEventListener('click', async () => 
         body: JSON.stringify({ k })
     });
 
-    await displayImage(URL.createObjectURL(await response.blob()));
     if (response.status === 200) {
+        await displayImage(URL.createObjectURL(await response.blob()));
         showNotification("The KMeans algorithm has converged.");
+        document.getElementById('stepKMeans').disabled = true;
+        document.getElementById('convergeKMeans').disabled = true;
+    } else {
+        console.error("Failed to converge KMeans");
     }
 });
 
 // Reset the algorithm
 document.getElementById('resetKMeans').addEventListener('click', async () => {
     await fetch('/reset_kmeans', { method: 'POST' });
-    await displayImage('/get_dataset'); // Re-display the dataset after resetting
+    await displayImage('/get_dataset');
 
-    // Re-enable canvas click listener for manual centroid selection
+    document.getElementById('initializeKMeans').disabled = false;
+    document.getElementById('stepKMeans').disabled = true;
+    document.getElementById('convergeKMeans').disabled = true;
+
     document.getElementById('kmeansCanvas').addEventListener('click', handleCanvasClick);
 
-    // Clear the notification area
     showNotification("");
+
+    // Handle initialization method status
+    const initMethod = getInitializationMethod();
+    if (initMethod === 'manual') {
+        document.getElementById('initializeKMeans').disabled = true;
+    }
 });
