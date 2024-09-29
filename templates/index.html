@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KMeans Clustering Algorithm</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+<h1>KMeans Clustering Algorithm</h1>
+
+<!-- Input for Number of Clusters -->
+<label for="numClusters">Number of Clusters (k):</label>
+<input type="number" id="numClusters" name="numClusters" min="2" max="10" value="4" required><br><br>
+
+<!-- Initialization Methods Dropdown -->
+<label for="initMethod">Select Initialization Method:</label>
+<select id="initMethod">
+    <option value="random">Random</option>
+    <option value="farthest_first">Farthest First</option>
+    <option value="kmeans++">KMeans++</option>
+    <option value="manual">Manual</option>
+</select><br><br>
+
+<!-- Generate Dataset Button -->
+<button id="generateDataset">Generate New Dataset</button><br><br>
+
+<!-- KMeans Control Buttons -->
+<button id="stepKMeans">Step Through KMeans</button>
+<button id="convergeKMeans">Run to Convergence</button>
+<button id="resetKMeans">Reset Algorithm</button><br><br>
+
+<!-- Canvas for Visualization -->
+<h2>Data Visualization</h2>
+<div id="visualizationContainer">
+    <canvas id="kmeansCanvas" width="600" height="400"></canvas>
+</div>
+
+<script src="/static/scripts.js"></script>
+<script>
+    // JS code for handling visualization and user interactions
+    const initMethod = document.getElementById('initMethod');
+    const generateDatasetBtn = document.getElementById('generateDataset');
+    const stepKMeansBtn = document.getElementById('stepKMeans');
+    const convergeKMeansBtn = document.getElementById('convergeKMeans');
+    const resetKMeansBtn = document.getElementById('resetKMeans');
+
+    generateDatasetBtn.addEventListener('click', () => {
+        // Generate a new dataset
+    });
+
+    stepKMeansBtn.addEventListener('click', () => {
+        // Step through KMeans process
+    });
+
+    convergeKMeansBtn.addEventListener('click', () => {
+        // Run KMeans to convergence
+    });
+
+    resetKMeansBtn.addEventListener('click', () => {
+        // Reset the visualization and algorithm
+    });
+
+    // Add additional event listeners and functions as needed for the manual centroid selection
+</script>
+</body>
+</html>
