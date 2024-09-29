@@ -1,5 +1,11 @@
 let manualCentroids = [];  // Array to hold manually selected centroids
 
+// Function to display a notification
+function showNotification(message) {
+    const notificationElement = document.getElementById('notification');
+    notificationElement.textContent = message;
+}
+
 // Function to get the selected initialization method
 function getInitializationMethod() {
     return document.getElementById('initMethod').value;
@@ -118,8 +124,21 @@ document.getElementById('stepKMeans').addEventListener('click', async () => {
         body: JSON.stringify({ k })
     });
 
-    await displayImage(URL.createObjectURL(await response.blob()));
+    if (response.status === 200) {
+        const contentType = response.headers.get('Content-Type');
+        if (contentType && contentType.includes('application/json')) {
+            const responseData = await response.json();
+            if (responseData.message === "Converged") {
+                showNotification("The KMeans algorithm has converged.");
+            }
+        } else {
+            await displayImage(URL.createObjectURL(await response.blob()));
+        }
+    } else {
+        console.error("Failed to step KMeans");
+    }
 });
+
 
 // Run KMeans to convergence
 document.getElementById('convergeKMeans').addEventListener('click', async () => {
@@ -132,6 +151,9 @@ document.getElementById('convergeKMeans').addEventListener('click', async () => 
     });
 
     await displayImage(URL.createObjectURL(await response.blob()));
+    if (response.status === 200) {
+        showNotification("The KMeans algorithm has converged.");
+    }
 });
 
 // Reset the algorithm
@@ -141,4 +163,7 @@ document.getElementById('resetKMeans').addEventListener('click', async () => {
 
     // Re-enable canvas click listener for manual centroid selection
     document.getElementById('kmeansCanvas').addEventListener('click', handleCanvasClick);
+
+    // Clear the notification area
+    showNotification("");
 });

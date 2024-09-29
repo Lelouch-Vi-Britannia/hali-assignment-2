@@ -32,11 +32,15 @@
 <button id="convergeKMeans">Run to Convergence</button>
 <button id="resetKMeans">Reset Algorithm</button>
 
+<!-- Notification area for convergence -->
+<div id="notification" style="color: green; font-weight: bold; margin-top: 20px;"></div>
+
 <!-- Canvas for Visualization -->
 <h2>Data Visualization</h2>
 <div id="canvasContainer" style="width: 500px; height: 500px; margin: auto;">
     <canvas id="kmeansCanvas" width="500" height="500" style="border:1px solid #000;"></canvas>
 </div>
+
 
 <script src="/static/scripts.js"></script>
 <script>
