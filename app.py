@@ -3,8 +3,8 @@ from io import BytesIO
 import os
 import numpy as np
 from PIL import Image
-from sklearn import datasets  # Importing datasets
-from k_means_impl import KMeans  # Assuming you have the class KMeans in k_means_impl.py
+from sklearn import datasets
+from k_means_impl import KMeans
 import matplotlib
 matplotlib.use('Agg')  # Use non-GUI backend
 import matplotlib.pyplot as plt
@@ -35,6 +35,20 @@ def generate_dataset():
 
     return send_file(TEMPFILE, mimetype='image/png')
 
+@app.route('/start_kmeans', methods=['POST'])
+def start_kmeans():
+    global kmeans
+    if data is None:
+        return jsonify({"error": "Dataset not initialized"}), 400
+
+    k = int(request.form['k'])
+    init_method = request.form.get('init_method', 'random')
+    kmeans = KMeans(data, k)
+    kmeans.centers = kmeans.initialize(method=init_method)
+
+    # Take an initial snapshot to visualize the starting centroids
+    kmeans.snap(kmeans.centers)
+    return send_image(kmeans.snaps[-1])  # Send the initial snapshot to the frontend
 
 @app.route('/step_kmeans', methods=['POST'])
 def step_kmeans():
@@ -42,11 +56,7 @@ def step_kmeans():
     if data is None:
         return jsonify({"error": "Dataset not initialized"}), 400
 
-    k = int(request.form['k'])
-    if kmeans is None or kmeans.k != k:
-        kmeans = KMeans(data, k)
-
-    kmeans.lloyds_step()  # Assuming you implement a step-by-step method in KMeans class
+    kmeans.lloyds_step()
     return send_image(kmeans.snaps[-1])
 
 @app.route('/converge_kmeans', methods=['POST'])
@@ -55,11 +65,7 @@ def converge_kmeans():
     if data is None:
         return jsonify({"error": "Dataset not initialized"}), 400
 
-    k = int(request.form['k'])
-    if kmeans is None or kmeans.k != k:
-        kmeans = KMeans(data, k)
-
-    kmeans.lloyds()  # Run until convergence
+    kmeans.lloyds()
     return send_image(kmeans.snaps[-1])
 
 @app.route('/reset_kmeans', methods=['POST'])

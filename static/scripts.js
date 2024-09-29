@@ -66,14 +66,40 @@ document.getElementById('convergeKMeans').addEventListener('click', async functi
     };
 });
 
-// Handle reset algorithm
-document.getElementById('resetKMeans').addEventListener('click', async function() {
-    console.log('Resetting KMeans...');
-    await fetch('/reset_kmeans', {
-        method: 'POST',
-    });
+// Function to clear the canvas
+function clearCanvas() {
     const canvas = document.getElementById('kmeansCanvas');
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// Function to display the dataset
+async function displayDataset() {
+    console.log('Displaying current dataset...');
+    const response = await fetch('/get_dataset', { method: 'GET' });
+    const imageBlob = await response.blob();
+    const imageURL = URL.createObjectURL(imageBlob);
+
+    const canvas = document.getElementById('kmeansCanvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.src = imageURL;
+    img.onload = () => {
+        ctx.drawImage(img, 0, 0);
+    };
+}
+
+// Handle reset algorithm
+document.getElementById('resetKMeans').addEventListener('click', async function() {
+    console.log('Resetting KMeans...');
+    await fetch('/reset_kmeans', { method: 'POST' });
+
+    // Clear the canvas and re-draw the dataset immediately
+    clearCanvas();
+    setTimeout(displayDataset, 100); // Use a short delay to ensure dataset re-draws correctly
 });
+
+
+
+
 
