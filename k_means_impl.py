@@ -19,12 +19,27 @@ class KMeans:
     def snap(self, centers):
         TEMPFILE = "temp.png"
 
-        fig, ax = plt.subplots()
-        ax.scatter(self.data[:, 0], self.data[:, 1], c=self.assignment)
-        ax.scatter(centers[:, 0], centers[:, 1], c='r')
-        fig.savefig(TEMPFILE)
+        # Create a square plot to match the canvas size
+        fig, ax = plt.subplots(figsize=(5, 5))
+
+        # Set fixed axis limits to align with the canvas coordinate range
+        ax.set_xlim(-5, 5)
+        ax.set_ylim(-5, 5)
+
+        # Plot data points and centroids
+        ax.scatter(self.data[:, 0], self.data[:, 1], c=self.assignment, cmap='viridis')
+        ax.scatter(centers[:, 0], centers[:, 1], c='r', marker='o', s=100)
+
+        # Remove any extra elements such as legends or titles to maximize the plot area
+        ax.axis('off')  # Turn off axes to use the entire frame
+
+        fig.tight_layout(pad=0)  # Remove padding around the plot
+        fig.savefig(TEMPFILE, bbox_inches='tight', pad_inches=0)
         plt.close()
+
+        # Append the snapshot to the list of images
         self.snaps.append(im.fromarray(np.asarray(im.open(TEMPFILE))))
+
 
     def isunassigned(self, i):
         return self.assignment[i] == -1
@@ -34,7 +49,7 @@ class KMeans:
             # Correctly select k unique points
             indices = np.random.choice(len(self.data), size=self.k, replace=False)
             centers = self.data[indices]
-        elif method == 'farthest':
+        elif method == 'farthest_first':
             centers = self.farthest_first_initialize()
         elif method == 'kmeans++':
             centers = self.kmeans_plus_plus_initialize()
@@ -80,6 +95,7 @@ class KMeans:
 
     def make_clusters(self, centers):
         for i in range(len(self.assignment)):
+            dist = float('inf')
             for j in range(self.k):
                 if self.isunassigned(i):
                     self.assignment[i] = j
@@ -93,13 +109,15 @@ class KMeans:
     def compute_centers(self):
         centers = []
         for i in range(self.k):
-            cluster = []
-            for j in range(len(self.assignment)):
-                if self.assignment[j] == i:
-                    cluster.append(self.data[j])
-            centers.append(np.mean(np.array(cluster), axis=0))
+            cluster = [self.data[j] for j in range(len(self.assignment)) if self.assignment[j] == i]
+            if len(cluster) > 0:
+                centers.append(np.mean(np.array(cluster), axis=0))
+            else:
+                # If a cluster is empty, reinitialize its center randomly
+                centers.append(self.data[np.random.choice(len(self.data))])
 
         return np.array(centers)
+
 
     def unassign(self):
         self.assignment = [-1 for _ in range(len(self.data))]
