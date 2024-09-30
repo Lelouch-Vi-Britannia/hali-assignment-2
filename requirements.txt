@@ -1,5 +1,5 @@
-flask~=3.0.3
-numpy~=2.1.1
-scikit-learn~=1.5.2
-pillow~=10.4.0
-matplotlib~=3.9.2
+flask
+numpy
+scikit-learn
+pillow
+matplotlib
